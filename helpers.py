@@ -40,7 +40,7 @@ def normalize_names_with_scryfall(cards):
     """Return {original: normalized} map using Scryfall's exact/fuzzy search."""
     mapping = {}
     headers = {
-        "User-Agent": "pauper_brew_society/1.0",
+        "User-Agent": "metacompare_bot/1.0",
         "Accept": "application/json;q=0.9,*/*;q=0.8",
     }
     for card in cards:
