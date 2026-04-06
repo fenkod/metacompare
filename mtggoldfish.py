@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 
 from helpers import get_deck_source_and_id, normalize_names_with_scryfall, normalize_dict
 
+
 def get_goldfish_deck_name_visual(url: str) -> str:
     # Extract deck ID and force the "visual" page
     m = re.search(r"/deck/(?:visual/)?(\d+)", url)
@@ -76,6 +77,9 @@ def process_mtggoldfish(url, deck_id):
 
     deck_name = get_goldfish_deck_name_visual(url)
 
+    ### TODO: Extract Format
+    format = "pauper"
+
     main = {}
     main_noland = {}
     total = {}
@@ -109,7 +113,7 @@ def process_mtggoldfish(url, deck_id):
     all_cards = set(result["deck"].keys())
     name_map = normalize_names_with_scryfall(all_cards)
 
-    return {
+    deck_collection = {
         "name": result["name"],
         "url": result["url"],
         "main": normalize_dict(result["main"], name_map),
@@ -117,6 +121,8 @@ def process_mtggoldfish(url, deck_id):
         "deck": normalize_dict(result["deck"], name_map),
         "deck_noland": normalize_dict(result["deck_noland"], name_map),
     }
+
+    return deck_collection, format
 
 
 if __name__ == '__main__':

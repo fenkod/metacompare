@@ -21,6 +21,9 @@ def process_tappedout(url, deck_id=None):
     name_match = re.search(r'^\s*Name\s+(.+)$', mtga_text, flags=re.M)
     name = name_match.group(1).strip() if name_match else "Unknown"
 
+    ### TODO: Extract Format
+    format = "pauper"
+
     # Split MTGA block into main vs sideboard lines
     lines = [ln.rstrip() for ln in mtga_text.strip().splitlines()]
     deck_start = lines.index("Deck") if "Deck" in lines else None
@@ -73,7 +76,7 @@ def process_tappedout(url, deck_id=None):
     all_cards = set(result["deck"].keys())
     name_map = normalize_names_with_scryfall(all_cards)
 
-    return {
+    deck_collection = {
         "name": result["name"],
         "url": result["url"],
         "main": normalize_dict(result["main"], name_map),
@@ -81,6 +84,8 @@ def process_tappedout(url, deck_id=None):
         "deck": normalize_dict(result["deck"], name_map),
         "deck_noland": normalize_dict(result["deck_noland"], name_map),
     }
+
+    return deck_collection, format
 
 
 if __name__ == "__main__":

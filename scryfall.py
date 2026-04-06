@@ -21,6 +21,9 @@ def get_scryfall_deck(deck_id):
 def process_scryfall(url, deck_id):
     deck_details = get_scryfall_deck(deck_id)
 
+    ### TODO: Extract Format
+    format = "pauper"
+
     main = {}
     main_noland = {}
     total = {}
@@ -55,7 +58,7 @@ def process_scryfall(url, deck_id):
             else:
                 total[card_name] = card_count
 
-    return {
+    deck_collection = {
         'name': deck_details['name'],
         'url': url,
         'main': main,
@@ -63,6 +66,8 @@ def process_scryfall(url, deck_id):
         'deck': total,
         'deck_noland': total_noland,
     }
+
+    return deck_collection, format
 
 
 if __name__ == '__main__':

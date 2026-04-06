@@ -52,6 +52,9 @@ def generate_archidekt_sets(deck_details, url):
 def process_archidekt(url, deck_id):
     deck_details = get_archidekt_deck(deck_id)
 
+    ### TODO: Extract Format
+    format = "pauper"
+
     main = {}
     main_noland = {}
     total = {}
@@ -69,7 +72,7 @@ def process_archidekt(url, deck_id):
             if 'Basic' not in card.get('card').get('oracleCard').get('superTypes'):
                 total_noland[card.get('card').get('oracleCard').get('name')] = int(card.get('quantity'))
 
-    return {
+    deck_collection = {
         'name': deck_details['name'],
         'url': url,
         'main': main,
@@ -77,6 +80,8 @@ def process_archidekt(url, deck_id):
         'deck': total,
         'deck_noland': total_noland,
     }
+
+    return deck_collection, format
 
 
 if __name__ == '__main__':

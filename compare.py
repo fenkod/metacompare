@@ -22,6 +22,8 @@ SOURCE_FUNCTION_MAP = {
     "tappedout": process_tappedout,
 }
 
+ALLOWED_FORMATS = ["pauper", "pioneer", "modern", "standard", "premodern", "legacy", "vintage"]
+
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -76,14 +78,18 @@ def generate_text_response_mtggoldfish(comparison_dict):
 
 
 
-def run_generator_from_url(url, metagame_collection):
+def run_generator_from_url(url):
     source, deck_id = get_deck_source_and_id(url)
     if source not in SOURCE_FUNCTION_MAP:
         return "This tool only supports Moxfield, Archidekt, MtgGoldfish, Scryfall, and TappedOut deck links at this time"
     else:
-        deck_dict = SOURCE_FUNCTION_MAP[source](url, deck_id)
-        comparison_dict = compare_deck_to_mtggoldfish_metagame(deck_dict, metagame_collection)
-        return generate_text_response_mtggoldfish( comparison_dict)
+        deck_dict, format = SOURCE_FUNCTION_MAP[source](url, deck_id)
+        if format in ALLOWED_FORMATS:
+            metagame_collection = pull_mtggoldfish_metagame(format)
+            comparison_dict = compare_deck_to_mtggoldfish_metagame(deck_dict, metagame_collection)
+            return generate_text_response_mtggoldfish( comparison_dict)
+        else:
+            return f"This tool only supports these formats: {ALLOWED_FORMATS}"
 
 
 # Press the green button in the gutter to run the script.
@@ -92,9 +98,8 @@ if __name__ == '__main__':
     parser.add_argument('--url', required=True)
     args = parser.parse_args()
     url = args.url
-    metagame_collection = pull_mtggoldfish_metagame()
     try:
-        print(run_generator_from_url(url, metagame_collection))
+        print(run_generator_from_url(url))
     except Exception as e:
         print(e)
 
