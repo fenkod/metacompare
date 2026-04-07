@@ -21,12 +21,41 @@ def process_tappedout(url, deck_id=None):
     name_match = re.search(r'^\s*Name\s+(.+)$', mtga_text, flags=re.M)
     name = name_match.group(1).strip() if name_match else "Unknown"
 
+    # Try the format badge first: /mtg-deck-builder/pauper/
+    format_match = re.search(
+        r'href="/mtg-deck-builder/([^"/]+)/"[^>]*>\s*([A-Za-z0-9 _-]+)\s*</a>',
+        html,
+        flags=re.I,
+    )
+
+    if format_match:
+        format = format_match.group(1).strip().lower()
+    else:
+        # Fallback to the <title>, e.g. "Tandem Solfatara (Pauper MTG Deck)"
+        title_match = re.search(r"<title>.*?\((.*?)\s+MTG Deck\)</title>", html, flags=re.I | re.S)
+        format = title_match.group(1).strip().lower() if title_match else None
+
     # Split MTGA block into main vs sideboard lines
     lines = [ln.rstrip() for ln in mtga_text.strip().splitlines()]
     deck_start = lines.index("Deck") if "Deck" in lines else None
     side_start = lines.index("Sideboard") if "Sideboard" in lines else None
-    main_lines = lines[deck_start + 1:side_start] if deck_start is not None and side_start is not None else []
-    side_lines = lines[side_start + 1:] if side_start is not None else []
+    maybe_start = lines.index("Maybeboard") if "Maybeboard" in lines else None
+
+    if deck_start is None:
+        main_lines = []
+        side_lines = []
+    else:
+        # Main deck runs from "Deck" to the first later section marker, if any
+        section_ends = [i for i in [side_start, maybe_start] if i is not None and i > deck_start]
+        main_end = min(section_ends) if section_ends else len(lines)
+        main_lines = lines[deck_start + 1:main_end]
+
+        # Sideboard runs from "Sideboard" to "Maybeboard" or EOF
+        if side_start is not None:
+            side_end = maybe_start if maybe_start is not None and maybe_start > side_start else len(lines)
+            side_lines = lines[side_start + 1:side_end]
+        else:
+            side_lines = []
 
     # Parse "Nx Card Name (...) ..." lines
     def parse_section(lines):
@@ -73,7 +102,7 @@ def process_tappedout(url, deck_id=None):
     all_cards = set(result["deck"].keys())
     name_map = normalize_names_with_scryfall(all_cards)
 
-    return {
+    deck_collection = {
         "name": result["name"],
         "url": result["url"],
         "main": normalize_dict(result["main"], name_map),
@@ -82,14 +111,20 @@ def process_tappedout(url, deck_id=None):
         "deck_noland": normalize_dict(result["deck_noland"], name_map),
     }
 
+    return deck_collection, format
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--url', required=True)
     args = parser.parse_args()
     url = args.url
-    source, deck_id = get_deck_source_and_id(url)
-    if source == ("tappedout"):
-        print(process_tappedout(url, deck_id))
-    else:
-        print("Non TappedOut link submitted")
+    try:
+        source, deck_id = get_deck_source_and_id(url)
+        if source == "tappedout":
+            deck_collection, format = process_tappedout(url, deck_id)
+            print({"format": format, "deck_collection": deck_collection})
+        else:
+            print("This is not a deck hosted by TappedOut")
+    except Exception as err:
+        raise err

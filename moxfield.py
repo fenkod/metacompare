@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 
+from helpers import get_deck_source_and_id
+
 load_dotenv()
 
 
@@ -44,50 +46,11 @@ def get_moxfield_deck(deck_id):
     return deck_output
 
 
-def generate_moxfield_sets(deck_output, url):
-    deck_name = deck_output["name"]
-    maindeck = deck_output['boards'].get('mainboard')
-    sideboard = deck_output['boards'].get('sideboard')
-
-    maindeck_card_ids = list(maindeck.get('cards').keys())
-
-    maindeck_set = {}
-    maindeck_no_lands_set = {}
-    total_set = {}
-    total_no_lands_set = {}
-
-    for card_id in maindeck_card_ids:
-        card_name = maindeck.get('cards')[card_id].get('card').get('name')
-        card_quantity = maindeck.get('cards')[card_id].get('quantity')
-        maindeck_set[card_name] = card_quantity
-        total_set[card_name] = card_quantity
-        if not 'Basic Land' in maindeck.get('cards')[card_id].get('card').get('type_line'):
-            maindeck_no_lands_set[card_name] = card_quantity
-            total_no_lands_set[card_name] = card_quantity
-
-    if sideboard:
-        sideboard_card_ids = list(sideboard.get('cards').keys())
-        for card_id in sideboard_card_ids:
-            card_name = sideboard.get('cards')[card_id].get('card').get('name')
-            card_quantity = sideboard.get('cards')[card_id].get('quantity')
-            total_set[card_name] = card_quantity
-            if not 'Basic Land' in sideboard.get('cards')[card_id].get('card').get('type_line'):
-                total_no_lands_set[card_name] = card_quantity
-
-    return {
-        "name": deck_name,
-        "url": url,
-        "main": maindeck_set,
-        "main_noland": maindeck_no_lands_set,
-        "deck": total_set,
-        "deck_noland": total_no_lands_set
-    }
-
-
 def process_moxfield(url, deck_id):
     deck_output = get_moxfield_deck(deck_id)
 
     deck_name = deck_output["name"]
+    format = deck_output["format"]
     maindeck = deck_output['boards'].get('mainboard')
     sideboard = deck_output['boards'].get('sideboard')
 
@@ -116,7 +79,7 @@ def process_moxfield(url, deck_id):
             if not 'Basic Land' in sideboard.get('cards')[card_id].get('card').get('type_line'):
                 total_no_lands_set[card_name] = card_quantity
 
-    return {
+    deck_collection = {
         "name": deck_name,
         "url": url,
         "main": maindeck_set,
@@ -124,6 +87,8 @@ def process_moxfield(url, deck_id):
         "deck": total_set,
         "deck_noland": total_no_lands_set
     }
+
+    return deck_collection, format
 
 
 if __name__ == '__main__':
@@ -132,9 +97,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     url = args.url
     try:
-        deck_id = strip_moxfield_deck_id(url)
-        deck_output = get_moxfield_deck(deck_id)
-        deck_collection = generate_moxfield_sets(deck_output, url)
-        print(deck_collection)
+        deck_source, deck_id = get_deck_source_and_id(url)
+        if deck_source == 'moxfield':
+            deck_collection, format = process_moxfield(url, deck_id)
+            print({"format": format, "deck_collection": deck_collection})
+        else:
+            print("This is not a deck hosted by Moxfield")
     except Exception as e:
         print(e)

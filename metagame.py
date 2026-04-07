@@ -1,3 +1,4 @@
+import argparse
 import json
 import re
 import requests
@@ -9,8 +10,8 @@ from pathlib import Path
 BLOCK_MARKERS = ("Attention Required", "Not Acceptable", "Cloudflare", "Request blocked")
 
 
-def get_mtggoldfish_metagame():
-    mtggoldfish_pauper_metagame_url = 'https://www.mtggoldfish.com/metagame/pauper/full#paper'
+def get_mtggoldfish_metagame(format="pauper"):
+    mtggoldfish_pauper_metagame_url = 'https://www.mtggoldfish.com/metagame/{0}/full#paper'.format(format)
     mtggoldfish_base_url = 'https://www.mtggoldfish.com'
 
     try:
@@ -40,7 +41,7 @@ def get_mtggoldfish_metagame():
     return metagame_list
 
 
-def generate_metagame_collections(metagame_list):
+def generate_metagame_collections(metagame_list, format="pauper"):
     for metagame_deck in metagame_list:
         try:
             deck_request = requests.get(metagame_deck.get('url'))
@@ -77,14 +78,14 @@ def generate_metagame_collections(metagame_list):
         metagame_deck['deck'] = deck
         metagame_deck['deck_noland'] = deck_landless
 
-    with open('metagame.json', 'w') as outfile:
+    with open('{0}_metagame.json'.format(format), 'w') as outfile:
         json.dump(metagame_list, outfile, indent=2)
 
     return metagame_list
 
 
-def pull_mtggoldfish_metagame():
-    metagame_file = Path("metagame.json")
+def pull_mtggoldfish_metagame(format="pauper"):
+    metagame_file = Path("{0}_metagame.json".format(format))
 
     try:
         load_path = metagame_file.resolve(strict=True)
@@ -99,6 +100,13 @@ def pull_mtggoldfish_metagame():
 
 
 if __name__ == '__main__':
-    metagame_list = get_mtggoldfish_metagame()
-    metagame_collection = generate_metagame_collections(metagame_list)
-    print(metagame_collection)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--format', required=True)
+    args = parser.parse_args()
+    format = (args.format).lower()
+    try:
+        metagame_list = get_mtggoldfish_metagame(format)
+        metagame_collection = generate_metagame_collections(metagame_list, format)
+        print(metagame_collection)
+    except Exception as e:
+        raise e
