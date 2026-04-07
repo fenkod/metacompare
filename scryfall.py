@@ -21,8 +21,7 @@ def get_scryfall_deck(deck_id):
 def process_scryfall(url, deck_id):
     deck_details = get_scryfall_deck(deck_id)
 
-    ### TODO: Extract Format
-    format = "pauper"
+    format = deck_details.get("format")
 
     main = {}
     main_noland = {}
@@ -75,8 +74,12 @@ if __name__ == '__main__':
     parser.add_argument('--url', required=True)
     args = parser.parse_args()
     url = args.url
-    source, deck_id = get_deck_source_and_id(url)
-    if source == ("scryfall"):
-        print(process_scryfall(url, deck_id))
-    else:
-        print("Non Scryfall link submitted")
+    try:
+        source, deck_id = get_deck_source_and_id(url)
+        if source == ("scryfall"):
+            deck_collection, format = process_scryfall(url, deck_id)
+            print({"format": format, "deck_collection": deck_collection})
+        else:
+            print("This is not a deck hosted by Scryfall")
+    except Exception as err:
+        raise err

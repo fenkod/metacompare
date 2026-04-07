@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 
+from helpers import get_deck_source_and_id
+
 load_dotenv()
 
 
@@ -95,9 +97,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     url = args.url
     try:
-        deck_id = strip_moxfield_deck_id(url)
-        deck_output = get_moxfield_deck(deck_id)
-        deck_collection = generate_moxfield_sets(deck_output, url)
-        print(deck_collection)
+        deck_source, deck_id = get_deck_source_and_id(url)
+        if deck_source == 'moxfield':
+            deck_collection, format = process_moxfield(url, deck_id)
+            print({"format": format, "deck_collection": deck_collection})
+        else:
+            print("This is not a deck hosted by Moxfield")
     except Exception as e:
         print(e)
