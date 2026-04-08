@@ -6,8 +6,13 @@ from bs4 import BeautifulSoup
 from lxml import html
 from pathlib import Path
 import xml.etree.ElementTree as ET
-
-from helpers import get_deck_source_and_id, normalize_names_with_scryfall, normalize_dict
+from helpers import (
+    get_deck_source_and_id,
+    normalize_names_with_scryfall,
+    normalize_dict,
+    load_name_map,
+    save_name_map,
+)
 
 
 def get_goldfish_deck_name_visual(url: str) -> str:
@@ -126,7 +131,9 @@ def process_mtggoldfish(url, deck_id):
     }
 
     all_cards = set(result["deck"].keys())
-    name_map = normalize_names_with_scryfall(all_cards)
+    name_map = load_name_map()
+    name_map = normalize_names_with_scryfall(all_cards, name_map)
+    save_name_map(name_map)
 
     deck_collection = {
         "name": result["name"],

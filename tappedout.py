@@ -3,7 +3,13 @@ import re
 import requests
 from collections import Counter
 
-from helpers import get_deck_source_and_id, normalize_names_with_scryfall, normalize_dict
+from helpers import (
+    get_deck_source_and_id,
+    normalize_names_with_scryfall,
+    normalize_dict,
+    load_name_map,
+    save_name_map,
+)
 
 
 def process_tappedout(url, deck_id=None):
@@ -100,7 +106,9 @@ def process_tappedout(url, deck_id=None):
     }
 
     all_cards = set(result["deck"].keys())
-    name_map = normalize_names_with_scryfall(all_cards)
+    name_map = load_name_map()
+    name_map = normalize_names_with_scryfall(all_cards, name_map)
+    save_name_map(name_map)
 
     deck_collection = {
         "name": result["name"],
