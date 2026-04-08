@@ -42,8 +42,8 @@ def compare_deck_to_mtggoldfish_metagame(deck_dict, metagame_collection):
 
     for metadeck in metagame_collection:
         if metadeck["deck"]:
-            deck = counter_cosine_similarity(Counter(deck_dict['main']), Counter(metadeck['deck']))
-            deck_noland = counter_cosine_similarity(Counter(deck_dict['main_noland']), Counter(metadeck['deck_noland']))
+            deck = counter_cosine_similarity(Counter(deck_dict['main']), Counter(metadeck['main']))
+            deck_noland = counter_cosine_similarity(Counter(deck_dict['main_noland']), Counter(metadeck['main_noland']))
             comparison_list.append(
                 {
                     "metadeck": metadeck["name"],
