@@ -6,7 +6,7 @@ from helpers import get_deck_source_and_id
 
 def get_scryfall_deck(deck_id):
     api_url = f"https://api.scryfall.com/decks/{deck_id}/export/json"
-    headers = {"User-Agent": "metacompare/0.1", "Accept": "*/*"}
+    headers = {"User-Agent": "metacompare/0.1", "Accept": "application/json;q=0.9,*/*;q=0.8"}
 
     try:
         r = requests.get(api_url, headers=headers)
