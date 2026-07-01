@@ -6,9 +6,10 @@ from helpers import get_deck_source_and_id
 
 def get_scryfall_deck(deck_id):
     api_url = f"https://api.scryfall.com/decks/{deck_id}/export/json"
+    headers = {"User-Agent": "metacompare/0.1", "Accept": "*/*"}
 
     try:
-        r = requests.get(api_url)
+        r = requests.get(api_url, headers=headers)
         r.raise_for_status()
     except Exception as err:
         raise (err)
